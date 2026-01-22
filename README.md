@@ -12,7 +12,7 @@
 > ```
 
 <p align="center">
-<img src="images/banner.png" width=750/>
+<img src="images/banner_python.png" width=750/>
 </p>
 
 Deep Symbolic Optimization (DSO) is a deep learning framework for symbolic optimization tasks. The package `dso` includes the core symbolic optimization algorithms, as well as support for two particular symbolic optimization tasks: (1) _symbolic regression_ (recovering tractable mathematical expressions from an input dataset) and (2) discovering _symbolic policies_ for reinforcement learning environments. In the code, these tasks are referred to as `regression` and `control`, respectively. We also include a simple interface for defining new tasks.
