@@ -115,7 +115,9 @@ def main(config1, config2, n, mode):
             counts[k] = count_violations(actions, obs, model2)
 
         for k, v in counts.items():
-            print(f"Prior '{k}' alone constrained {v}/{n} samples from no-prior config.")
+            print(
+                f"Prior '{k}' alone constrained {v}/{n} samples from no-prior config."
+            )
 
     """
     Estimate search space reduction from no priors to config1.

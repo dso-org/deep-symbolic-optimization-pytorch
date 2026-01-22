@@ -169,9 +169,7 @@ class DeepSymbolicOptimizer:
         backup_seed = self.config_experiment["seed"]
         if not os.path.exists(path):
             if "starting_seed" in self.config_experiment:
-                self.config_experiment["seed"] = self.config_experiment[
-                    "starting_seed"
-                ]
+                self.config_experiment["seed"] = self.config_experiment["starting_seed"]
                 del self.config_experiment["starting_seed"]
             with open(path, "w") as f:
                 json.dump(self.config, f, indent=3)
@@ -216,7 +214,7 @@ class DeepSymbolicOptimizer:
             self.gp_controller,
             self.logger,
             self.pool,
-            **self.config_training
+            **self.config_training,
         )
 
     def make_logger(self):
@@ -230,10 +228,7 @@ class DeepSymbolicOptimizer:
 
     def make_policy(self):
         return make_policy(
-            self.prior,
-            self.state_manager,
-            device=self.device,
-            **self.config_policy
+            self.prior, self.state_manager, device=self.device, **self.config_policy
         )
 
     def make_gp_controller(self):

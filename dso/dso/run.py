@@ -110,7 +110,9 @@ def print_summary(config, runs, messages):
     type=int,
     help="Total number of samples to draw (overwrites config).",
 )
-def main(config_template, runs, n_cores_task, seed, benchmark, exp_name, debug, n_samples):
+def main(
+    config_template, runs, n_cores_task, seed, benchmark, exp_name, debug, n_samples
+):
     """Runs DSO in parallel across multiple seeds using multiprocessing."""
 
     messages = []
@@ -155,7 +157,6 @@ def main(config_template, runs, n_cores_task, seed, benchmark, exp_name, debug, 
             f'INFO: Replacing training n_samples {config["training"]["n_samples"]} with command-line n_samples {n_samples}.'
         )
         config["training"]["n_samples"] = n_samples
-
 
     # Save starting seed and run command
     config["experiment"]["starting_seed"] = config["experiment"]["seed"]

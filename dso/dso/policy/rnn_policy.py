@@ -357,7 +357,9 @@ class RNNPolicy(Policy):
     def compute_probs(self, memory_batch, log=False):
         with torch.no_grad():
             neglogp, _ = self.make_neglogp_and_entropy(memory_batch, None)
-            probs = (-neglogp).cpu().numpy() if log else torch.exp(-neglogp).cpu().numpy()
+            probs = (
+                (-neglogp).cpu().numpy() if log else torch.exp(-neglogp).cpu().numpy()
+            )
         return probs
 
     def apply_action_prob_lowerbound(self, logits):

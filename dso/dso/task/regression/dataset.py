@@ -180,7 +180,9 @@ class BenchmarkDataset(object):
             if y.shape[0] == 0:
                 count_repeated_empty += 1
                 if count_repeated_empty > max_repeated_empty:
-                    assert False, f"Dataset cannot be created in the given range: {specs}"
+                    assert (
+                        False
+                    ), f"Dataset cannot be created in the given range: {specs}"
             # Put old and new data together if available
             if X_tmp is not None:
                 X = np.append(X, X_tmp, axis=0)

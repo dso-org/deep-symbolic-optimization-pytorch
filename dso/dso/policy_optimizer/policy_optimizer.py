@@ -99,9 +99,7 @@ class PolicyOptimizer(ABC):
     def _summary_dict(self, **kwargs):
         return {
             key: (
-                value.detach().cpu().item()
-                if torch.is_tensor(value)
-                else float(value)
+                value.detach().cpu().item() if torch.is_tensor(value) else float(value)
             )
             for key, value in kwargs.items()
         }

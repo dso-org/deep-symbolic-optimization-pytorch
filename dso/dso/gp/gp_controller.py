@@ -41,7 +41,7 @@ class GPController:
         parallel_eval=False,
         ind_representation="",
         verbose=False,
-        **kwargs
+        **kwargs,
     ):
         """
         Parameters

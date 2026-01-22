@@ -240,7 +240,10 @@ def mutConstrainedUniformInt(individual, low, up, indpb):
     """
     size = len(individual.work_repr)
     for i in np.random.permutation(size):
-        if random.random() < indpb and individual.num_mutations < individual.max_mutations:
+        if (
+            random.random() < indpb
+            and individual.num_mutations < individual.max_mutations
+        ):
             individual.work_repr[i] = np.random.randint(low, up)
             # update number of mutations
             individual.update_num_mutations()
