@@ -117,15 +117,13 @@ class Checkpoint:
                 self.checkpoint_dir is not None
             ), "Cannot support automated checkpointing with model.save_dir=None."
             timestamp = datetime.now().strftime("%Y-%m-%d-%H%M%S")
-            save_path = os.path.join(
-                self.checkpoint_dir, "checkpoint_{}".format(timestamp)
-            )
+            save_path = os.path.join(self.checkpoint_dir, f"checkpoint_{timestamp}")
         if os.path.exists(save_path):
             paths = os.listdir(os.path.dirname(save_path))
             paths = [
                 path for path in paths if path.startswith(os.path.basename(save_path))
             ]
-            save_path += "_{}".format(len(paths))
+            save_path += f"_{len(paths)}"
         os.makedirs(save_path, exist_ok=False)
 
         # Save the policy and optimizer

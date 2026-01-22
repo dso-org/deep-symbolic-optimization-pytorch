@@ -20,3 +20,4 @@ dep-repos/
 .*
 !/.gitignore
 *.key
+exclude*

@@ -129,75 +129,9 @@ class StatsLogger:
         Opens and prepares all output log files controlled by this class.
         """
         if self.output_file is not None:
-            os.makedirs(os.path.dirname(self.output_file), exist_ok=True)
-            prefix, _ = os.path.splitext(self.output_file)
-            self.all_r_output_file = "{}_all_r.npy".format(prefix)
-            self.all_info_output_file = "{}_all_info.csv".format(prefix)
-            self.hof_output_file = "{}_hof.csv".format(prefix)
-            self.pf_output_file = "{}_pf.csv".format(prefix)
-            self.positional_entropy_output_file = "{}_positional_entropy.npy".format(
-                prefix
-            )
-            self.top_samples_per_batch_output_file = (
-                "{}_top_samples_per_batch.csv".format(prefix)
-            )
-            self.cache_output_file = "{}_cache.csv".format(prefix)
-            self.token_counter_output_file = "{}_token_count.csv".format(prefix)
-            with open(self.output_file, "w") as f:
-                # r_best : Maximum across all iterations so far
-                # r_max : Maximum across this iteration's batch
-                # r_avg_full : Average across this iteration's full batch (before taking epsilon subset)
-                # r_avg_sub : Average across this iteration's epsilon-subset batch
-                # n_unique_* : Number of unique Programs in batch
-                # n_novel_* : Number of never-before-seen Programs per batch
-                # a_ent_* : Empirical positional entropy across sequences averaged over positions
-                # invalid_avg_* : Fraction of invalid Programs per batch
-                # baseline: Baseline value used for training
-                # time: time used to learn in this iteration (in seconds)
-                headers = [
-                    "r_best",
-                    "r_max",
-                    "r_avg_full",
-                    "r_avg_sub",
-                    "l_avg_full",
-                    "l_avg_sub",
-                    "ewma",
-                    "n_unique_full",
-                    "n_unique_sub",
-                    "n_novel_full",
-                    "n_novel_sub",
-                    "a_ent_full",
-                    "a_ent_sub",
-                    "invalid_avg_full",
-                    "invalid_avg_sub",
-                    "baseline",
-                    "time",
-                    "nevals",
-                ]
-                f.write("{}\n".format(",".join(headers)))
-            if self.save_all_iterations:
-                with open(self.all_info_output_file, "w") as f:
-                    # iteration : The iteration in which this line was saved
-                    # r : reward for this program
-                    # l : length of the program
-                    # invalid : if the program is invalid
-                    headers = ["iteration", "r", "l", "invalid"]
-                    f.write("{}\n".format(",".join(headers)))
-            if self.save_token_count:
-                with open(self.token_counter_output_file, "w") as f:
-                    headers = [str(token) for token in Program.library.tokens]
-                    f.write("{}\n".format(",".join(headers)))
-
+            prefix = self._extracted_from_setup_output_files_6()
         else:
-            self.all_r_output_file = None
-            self.all_info_output_file = None
-            self.hof_output_file = None
-            self.pf_output_file = None
-            self.positional_entropy_output_file = None
-            self.top_samples_per_batch_output_file = None
-            self.cache_output_file = None
-            self.token_counter_output_file = None
-
+            self._extracted_from_setup_output_files_62()
         # Create summary writer
         if self.save_summary:
             if SummaryWriter is None:
@@ -205,13 +139,83 @@ class StatsLogger:
                     "TensorBoard support requires torch.utils.tensorboard."
                 )
             if self.output_file is not None:
-                summary_dir = "{}_summary".format(prefix)
+                summary_dir = f"{prefix}_summary"
             else:
                 timestamp = datetime.now().strftime("%Y-%m-%d-%H%M%S")
                 summary_dir = os.path.join("summary", timestamp)
             self.summary_writer = SummaryWriter(summary_dir)
         else:
             self.summary_writer = None
+
+    # TODO Rename this here and in `setup_output_files`
+    def _extracted_from_setup_output_files_62(self):
+        self.all_r_output_file = None
+        self.all_info_output_file = None
+        self.hof_output_file = None
+        self.pf_output_file = None
+        self.positional_entropy_output_file = None
+        self.top_samples_per_batch_output_file = None
+        self.cache_output_file = None
+        self.token_counter_output_file = None
+
+    # TODO Rename this here and in `setup_output_files`
+    def _extracted_from_setup_output_files_6(self):
+        os.makedirs(os.path.dirname(self.output_file), exist_ok=True)
+        result, _ = os.path.splitext(self.output_file)
+        self.all_r_output_file = f"{result}_all_r.npy"
+        self.all_info_output_file = f"{result}_all_info.csv"
+        self.hof_output_file = f"{result}_hof.csv"
+        self.pf_output_file = f"{result}_pf.csv"
+        self.positional_entropy_output_file = f"{result}_positional_entropy.npy"
+        self.top_samples_per_batch_output_file = f"{result}_top_samples_per_batch.csv"
+        self.cache_output_file = f"{result}_cache.csv"
+        self.token_counter_output_file = f"{result}_token_count.csv"
+        with open(self.output_file, "w") as f:
+            # r_best : Maximum across all iterations so far
+            # r_max : Maximum across this iteration's batch
+            # r_avg_full : Average across this iteration's full batch (before taking epsilon subset)
+            # r_avg_sub : Average across this iteration's epsilon-subset batch
+            # n_unique_* : Number of unique Programs in batch
+            # n_novel_* : Number of never-before-seen Programs per batch
+            # a_ent_* : Empirical positional entropy across sequences averaged over positions
+            # invalid_avg_* : Fraction of invalid Programs per batch
+            # baseline: Baseline value used for training
+            # time: time used to learn in this iteration (in seconds)
+            headers = [
+                "r_best",
+                "r_max",
+                "r_avg_full",
+                "r_avg_sub",
+                "l_avg_full",
+                "l_avg_sub",
+                "ewma",
+                "n_unique_full",
+                "n_unique_sub",
+                "n_novel_full",
+                "n_novel_sub",
+                "a_ent_full",
+                "a_ent_sub",
+                "invalid_avg_full",
+                "invalid_avg_sub",
+                "baseline",
+                "time",
+                "nevals",
+            ]
+            f.write(f'{",".join(headers)}\n')
+        if self.save_all_iterations:
+            with open(self.all_info_output_file, "w") as f:
+                # iteration : The iteration in which this line was saved
+                # r : reward for this program
+                # l : length of the program
+                # invalid : if the program is invalid
+                headers = ["iteration", "r", "l", "invalid"]
+                f.write(f'{",".join(headers)}\n')
+        if self.save_token_count:
+            with open(self.token_counter_output_file, "w") as f:
+                headers = [str(token) for token in Program.library.tokens]
+                f.write(f'{",".join(headers)}\n')
+
+        return result
 
     def save_stats(
         self,
@@ -326,10 +330,9 @@ class StatsLogger:
             self.write_token_count(programs)
 
         # summary writers have their own buffer
-        if self.save_summary:
-            if isinstance(summaries, dict):
-                for key, value in summaries.items():
-                    self.summary_writer.add_scalar(key, value, iteration)
+        if self.save_summary and isinstance(summaries, dict):
+            for key, value in summaries.items():
+                self.summary_writer.add_scalar(key, value, iteration)
 
         # Should the buffer be saved now?
         if iteration % self.buffer_frequency == 0:
@@ -390,91 +393,14 @@ class StatsLogger:
 
         # Save the hall of fame
         if self.hof is not None and self.hof > 0:
-            assert (
-                not Program.task.stochastic
-            ), "HOF only supported for deterministic Tasks."
-            programs = list(
-                Program.cache.values()
-            )  # All unique Programs found during training
-            r = [p.r for p in programs]
-            i_hof = np.argsort(r)[-self.hof :][::-1]  # Indices of top hof Programs
-            hof = [programs[i] for i in i_hof]
-
-            if pool is not None:
-                results = pool.map(hof_work, hof)
-            else:
-                results = list(map(hof_work, hof))
-
-            eval_keys = list(results[0][-1].keys())
-            columns = [
-                "r",
-                "count_on_policy",
-                "count_off_policy",
-                "expression",
-                "traversal",
-            ] + eval_keys
-            hof_results = [
-                result[:-1] + [result[-1][k] for k in eval_keys] for result in results
-            ]
-            df = pd.DataFrame(hof_results, columns=columns)
-            if self.hof_output_file is not None:
-                print("Saving Hall of Fame to {}".format(self.hof_output_file))
-                df.to_csv(self.hof_output_file, header=True, index=False)
-
+            self._extracted_from_save_results_37(pool)
         # Save cache
         if self.save_cache and Program.cache:
-            print("Saving cache to {}".format(self.cache_output_file))
-            cache_data = [
-                (repr(p), p.on_policy_count, p.off_policy_count, p.r)
-                for p in Program.cache.values()
-            ]
-            df_cache = pd.DataFrame(cache_data)
-            df_cache.columns = ["str", "count_on_policy", "count_off_policy", "r"]
-            if self.save_cache_r_min is not None:
-                df_cache = df_cache[df_cache["r"] >= self.save_cache_r_min]
-            df_cache.to_csv(self.cache_output_file, header=True, index=False)
-
+            self._extracted_from_save_results_70()
         # Compute the pareto front
         if self.save_pareto_front:
 
-            assert (
-                not Program.task.stochastic
-            ), "Pareto front only supported for deterministic Tasks."
-
-            all_programs = list(Program.cache.values())
-            costs = np.array([(p.complexity, -p.r) for p in all_programs])
-            pareto_efficient_mask = is_pareto_efficient(costs)  # List of bool
-            pf = list(compress(all_programs, pareto_efficient_mask))
-            pf.sort(key=lambda p: p.complexity)  # Sort by complexity
-
-            if pool is not None:
-                results = pool.map(pf_work, pf)
-            else:
-                results = list(map(pf_work, pf))
-
-            eval_keys = list(results[0][-1].keys())
-            columns = [
-                "complexity",
-                "r",
-                "count_on_policy",
-                "count_off_policy",
-                "expression",
-                "traversal",
-            ] + eval_keys
-            pf_results = [
-                result[:-1] + [result[-1][k] for k in eval_keys] for result in results
-            ]
-            df = pd.DataFrame(pf_results, columns=columns)
-            if self.pf_output_file is not None:
-                print("Saving Pareto Front to {}".format(self.pf_output_file))
-                df.to_csv(self.pf_output_file, header=True, index=False)
-
-            # Look for a success=True case within the Pareto front
-            for p in pf:
-                if p.evaluate.get("success"):
-                    p_final = p
-                    break
-
+            self._extracted_from_save_results_84(pool)
         # Save error summaries
         # Print error statistics of the cache
         n_invalid = 0
@@ -498,15 +424,93 @@ class StatsLogger:
             print("Error type counts:")
             for error_type, count in error_types.items():
                 print("  {}: {} ({:.1%})".format(error_type, count, count / n_invalid))
-                result["error_" + str(error_type)] = count
+                result[f"error_{str(error_type)}"] = count
             print("Error node counts:")
             for error_node, count in error_nodes.items():
                 print("  {}: {} ({:.1%})".format(error_node, count, count / n_invalid))
-                result["error_node_" + str(error_node)] = count
+                result[f"error_node_{str(error_node)}"] = count
 
         result["n_samples"] = n_samples
         result["n_cached"] = len(Program.cache)
         return result
+
+    # TODO Rename this here and in `save_results`
+    def _extracted_from_save_results_84(self, pool):
+        assert (
+            not Program.task.stochastic
+        ), "Pareto front only supported for deterministic Tasks."
+
+        all_programs = list(Program.cache.values())
+        costs = np.array([(p.complexity, -p.r) for p in all_programs])
+        pareto_efficient_mask = is_pareto_efficient(costs)  # List of bool
+        pf = list(compress(all_programs, pareto_efficient_mask))
+        pf.sort(key=lambda p: p.complexity)  # Sort by complexity
+
+        results = pool.map(pf_work, pf) if pool is not None else list(map(pf_work, pf))
+        eval_keys = list(results[0][-1].keys())
+        columns = [
+            "complexity",
+            "r",
+            "count_on_policy",
+            "count_off_policy",
+            "expression",
+            "traversal",
+        ] + eval_keys
+        pf_results = [
+            result[:-1] + [result[-1][k] for k in eval_keys] for result in results
+        ]
+        df = pd.DataFrame(pf_results, columns=columns)
+        if self.pf_output_file is not None:
+            print(f"Saving Pareto Front to {self.pf_output_file}")
+            df.to_csv(self.pf_output_file, header=True, index=False)
+
+        # Look for a success=True case within the Pareto front
+        for p in pf:
+            if p.evaluate.get("success"):
+                p_final = p
+                break
+
+    # TODO Rename this here and in `save_results`
+    def _extracted_from_save_results_70(self):
+        print(f"Saving cache to {self.cache_output_file}")
+        cache_data = [
+            (repr(p), p.on_policy_count, p.off_policy_count, p.r)
+            for p in Program.cache.values()
+        ]
+        df_cache = pd.DataFrame(cache_data)
+        df_cache.columns = ["str", "count_on_policy", "count_off_policy", "r"]
+        if self.save_cache_r_min is not None:
+            df_cache = df_cache[df_cache["r"] >= self.save_cache_r_min]
+        df_cache.to_csv(self.cache_output_file, header=True, index=False)
+
+    # TODO Rename this here and in `save_results`
+    def _extracted_from_save_results_37(self, pool):
+        assert (
+            not Program.task.stochastic
+        ), "HOF only supported for deterministic Tasks."
+        programs = list(
+            Program.cache.values()
+        )  # All unique Programs found during training
+        r = [p.r for p in programs]
+        i_hof = np.argsort(r)[-self.hof :][::-1]  # Indices of top hof Programs
+        hof = [programs[i] for i in i_hof]
+
+        results = list(map(hof_work, hof)) if pool is None else pool.map(hof_work, hof)
+        eval_keys = list(results[0][-1].keys())
+        columns = [
+            "r",
+            "count_on_policy",
+            "count_off_policy",
+            "expression",
+            "traversal",
+        ] + eval_keys
+        hof_results = [
+            result[:-1] + [result[-1][k] for k in eval_keys] for result in results
+        ]
+        df = pd.DataFrame(hof_results, columns=columns)
+        if self.hof_output_file is not None:
+            print(f"Saving Hall of Fame to {self.hof_output_file}")
+            df.to_csv(self.hof_output_file, header=True, index=False)
 
     def write_token_count(self, programs):
         token_counter = {token: 0 for token in Program.library.names}
@@ -514,7 +518,7 @@ class StatsLogger:
             for token in program.traversal:
                 token_counter[token.name] += 1
         stats = np.array(
-            [[token_counter[token] for token in token_counter.keys()]], dtype=np.int
+            [[token_counter[token] for token in token_counter]], dtype=np.int
         )
         np.savetxt(self.buffer_token_stats, stats, fmt="%i", delimiter=",")
 

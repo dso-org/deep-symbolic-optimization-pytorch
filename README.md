@@ -1,14 +1,14 @@
 # Deep Symbolic Optimization — PyTorch Version
 
 > **Note**
-> This repository is a refactor of `https://github.com/dso-org/deep-symbolic-optimization`
-> to use PyTorch for all neural-network components. TensorFlow is no longer
-> required.
+> This repository is a PyTorch refactor of
+> [dso-org/deep-symbolic-optimization](https://github.com/dso-org/deep-symbolic-optimization).
+> All neural-network components run on PyTorch; TensorFlow is not required.
 >
 > **Quick formatting and linting (run from repo root):**
 > ```bash
 > python -m black .
-> python -m flake8 .
+> python -m flake8 dso
 > ```
 
 <p align="center">
