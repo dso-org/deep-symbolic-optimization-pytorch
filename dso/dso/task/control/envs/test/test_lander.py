@@ -60,7 +60,7 @@ def setup_envs_run_rollouts(seed: int, rollout_length: int):
         assert np.array_equal(
             results[names[0]]["done"], results[names[1]]["done"]
         ), "Episode dones do not match between above environments."
-        print(f"Tests passed.")
+        print("Tests passed.")
 
     return 0
 

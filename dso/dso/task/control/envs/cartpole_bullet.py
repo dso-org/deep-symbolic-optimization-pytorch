@@ -3,7 +3,8 @@ Classic cart-pole system implemented by Rich Sutton et al.
 Copied from https://webdocs.cs.ualberta.ca/~sutton/book/code/pole.c
 """
 
-import os, inspect
+import os
+import inspect
 
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(os.path.dirname(currentdir))

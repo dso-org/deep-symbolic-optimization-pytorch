@@ -127,7 +127,7 @@ class Model:
                 return None
             try:
                 U.load_model(self.alg, alg_models[0])
-            except:
+            except Exception:
                 print(
                     "WARNING: Model available but could not load: '{}'".format(
                         alg_models[0]

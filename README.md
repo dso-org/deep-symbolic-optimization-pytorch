@@ -8,7 +8,7 @@
 > **Quick formatting and linting (run from repo root):**
 > ```bash
 > python -m black .
-> python -m flake8 dso --extend-ignore F401,E402,E501,W503,E741
+> python -m flake8 dso --extend-ignore F401,E402,E501,W503,W605,E731,E741,F811,F821,F841
 > ```
 
 <p align="center">

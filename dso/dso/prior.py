@@ -1081,8 +1081,7 @@ class StateCheckerConstraint(Constraint):
             targets.extend(
                 child
                 for child in library.state_checker_tokens
-                if self.library[child].state_index
-                < self.library[parent].state_index
+                if self.library[child].state_index < self.library[parent].state_index
             )
             # Add StateChecker 'xl < tk' to targets if l == i and tk >= tj
             for child in library.state_checker_tokens:

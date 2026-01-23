@@ -23,7 +23,7 @@ Modified by Jacob Pettit (pettit8@llnl.gov) from: https://github.com/openai/gym/
 
 from argparse import ArgumentParser
 
-import sys, math
+import math
 import numpy as np
 
 import Box2D
@@ -93,12 +93,12 @@ class CustomLunarLander(gym.Env, EzPickle):
     ----------
 
     reward_shaping_coef : float
-        Coefficient for scaling the shaped term in the reward function. 
-        Setting to 0 disables reward shaping completely. Any scalar value is acceptable. 
+        Coefficient for scaling the shaped term in the reward function.
+        Setting to 0 disables reward shaping completely. Any scalar value is acceptable.
         Defaults to 1, which is the same as normal LunarLander.
 
     continuous : bool
-        Boolean representing whether to use a continuous action space. When True, uses continuous actions. 
+        Boolean representing whether to use a continuous action space. When True, uses continuous actions.
         It defaults to false.
     """
 
@@ -553,7 +553,7 @@ def demo_heuristic_lander(env, seed=None, render=False):
 
         if render:
             still_open = env.render()
-            if still_open == False:
+            if not still_open:
                 break
 
         if steps % 20 == 0 or done:
