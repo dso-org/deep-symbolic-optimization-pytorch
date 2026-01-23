@@ -280,11 +280,8 @@ class BenchmarkDataset(object):
                 fmt="%1.5f",
             )
             return f"Saved dataset to               : {save_path}\n"
-        except:
-            import sys
-
-            e = sys.exc_info()[0]
-            print(f"WARNING: Could not save dataset: {e}")
+        except Exception:
+            self._extracted_from_plot_22("WARNING: Could not save dataset: ")
 
     def plot(self, logdir="./"):
         """Plot Dataset with underlying ground truth."""
@@ -309,14 +306,18 @@ class BenchmarkDataset(object):
                 os.makedirs(logdir, exist_ok=True)
                 plt.savefig(save_path)
                 print(f"Saved plot to                  : {save_path}")
-            except:
-                import sys
-
-                e = sys.exc_info()[0]
-                print(f"WARNING: Could not plot dataset: {e}")
+            except Exception:
+                self._extracted_from_plot_22("WARNING: Could not plot dataset: ")
             plt.close()
         else:
             print("WARNING: Plotting only supported for 2D datasets.")
+
+    # TODO Rename this here and in `save` and `plot`
+    def _extracted_from_plot_22(self, arg0):
+        import sys
+
+        e = sys.exc_info()[0]
+        print(f"{arg0}{e}")
 
 
 @click.command()

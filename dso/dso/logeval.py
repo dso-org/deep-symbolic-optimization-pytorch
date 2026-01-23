@@ -103,10 +103,10 @@ class LogEval:
         if self.pf_df is not None:
             print("Successfully loaded Pareto Front data")
         # Show any warnings that occured during loading the data
-        if len(self.warnings) > 0:
+        if self.warnings:
             print("*** WARNING:")
             for warning in self.warnings:
-                print("    --> {}".format(warning))
+                print(f"    --> {warning}")
         print("-- LOADING LOGS END ------------------")
 
     def _get_config(self):
@@ -128,10 +128,10 @@ class LogEval:
             summary_df.sort_values("seed")
             try:
                 self.metrics["success_rate"] = summary_df["success"].mean()
-            except:
+            except Exception:
                 self.metrics["success_rate"] = 0.0
         except Exception as e:
-            self.warnings.append("Can't load summary: {}".format(e))
+            self.warnings.append(f"Can't load summary: {e}")
 
         return summary_df
 
@@ -142,13 +142,13 @@ class LogEval:
 
         # Get files that match regexp
         task_name = self.config["experiment"]["task_name"]
-        r = re.compile(r"dso_{}_\d+_{}.csv".format(task_name, log_type))
+        r = re.compile(f"dso_{task_name}_\d+_{log_type}.csv")
         files = filter(r.match, os.listdir(self.save_path))
         files = [os.path.join(self.save_path, f) for f in files]
         seeds = [int(f.split("_")[-2]) for f in files]
 
-        if len(files) == 0:
-            self.warnings.append("No data for {}!".format(log_type))
+        if not files:
+            self.warnings.append(f"No data for {log_type}!")
             return None
 
         # Load each df
@@ -238,25 +238,16 @@ class LogEval:
                 ax[0, i].set_xlabel(_x_label[i])
                 ax[0, i].set_ylabel(_y_label[i])
         plt.suptitle(
-            "{} - {}".format(
-                self.PLOT_HELPER[log_type]["name"],
-                self.config["experiment"]["task_name"],
-            ),
+            f'{self.PLOT_HELPER[log_type]["name"]} - {self.config["experiment"]["task_name"]}',
             fontsize=14,
         )
         plt.tight_layout()
         if save_plots:
             save_path = os.path.join(
                 self.save_path,
-                "dso_{}_plot_{}.png".format(
-                    self.config["experiment"]["task_name"], log_type
-                ),
+                f'dso_{self.config["experiment"]["task_name"]}_plot_{log_type}.png',
             )
-            print(
-                "  Saving {} plot to {}".format(
-                    self.PLOT_HELPER[log_type]["name"], save_path
-                )
-            )
+            print(f'  Saving {self.PLOT_HELPER[log_type]["name"]} plot to {save_path}')
             plt.savefig(save_path)
         if show_plots:
             plt.show()
@@ -274,23 +265,19 @@ class LogEval:
         """Generates a summary of important experiment outcomes."""
         print("\n-- ANALYZING LOG START --------------")
         try:
-            print("Task_____________{}".format(self.config["task"]["task_type"]))
-            print("Source path______{}".format(self.save_path))
-            print("Runs_____________{}".format(self.n_seeds))
-            print("Max Samples/run__{}".format(self.config["training"]["n_samples"]))
+            print(f'Task_____________{self.config["task"]["task_type"]}')
+            print(f"Source path______{self.save_path}")
+            print(f"Runs_____________{self.n_seeds}")
+            print(f'Max Samples/run__{self.config["training"]["n_samples"]}')
             if "success_rate" in self.metrics:
-                print("Success_rate_____{}".format(self.metrics["success_rate"]))
+                print(f'Success_rate_____{self.metrics["success_rate"]}')
             if len(self.warnings) > 0:
                 print("Found issues:")
                 for warning in range(len(self.warnings)):
-                    print("  {}".format(warning))
+                    print(f"  {warning}")
             if self.hof_df is not None and show_hof:
                 hof_show_count = min(show_count, len(self.hof_df))
-                print(
-                    "Hall of Fame (Top {} of {})____".format(
-                        hof_show_count, len(self.hof_df)
-                    )
-                )
+                print(f"Hall of Fame (Top {hof_show_count} of {len(self.hof_df)})____")
                 for i in range(hof_show_count):
                     print(
                         "  {:3d}: S={:03d} R={:8.6f} <-- {}".format(
@@ -310,9 +297,7 @@ class LogEval:
                     )
             if self.pf_df is not None and show_pf:
                 print(
-                    "Pareto Front ({} of {})____".format(
-                        min(show_count, len(self.pf_df.index)), len(self.pf_df.index)
-                    )
+                    f"Pareto Front ({min(show_count, len(self.pf_df.index))} of {len(self.pf_df.index)})____"
                 )
                 for i in range(min(show_count, len(self.pf_df.index))):
                     print(
@@ -334,12 +319,10 @@ class LogEval:
         except FloatingPointError:
             print("Error when analyzing!")
             for warning in self.warnings:
-                print("    --> {}".format(warning))
+                print(f"    --> {warning}")
         print("-- ANALYZING LOG END ----------------")
 
 
-@click.command()
-@click.argument("config_path", default=None, type=str)
 @click.option(
     "--show_count",
     default=10,

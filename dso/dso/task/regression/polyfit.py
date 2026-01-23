@@ -318,22 +318,20 @@ def partial_execute(traversal, X):
                 intermediate_result = "poly"
             elif token.input_var is not None:
                 intermediate_result = X[:, token.input_var]
-            else:
-                if all(isinstance(t, np.ndarray) for t in terminals):
-                    if isinstance(token, StateChecker):
-                        token.set_state_value(X[:, token.state_index])
-                    intermediate_result = token(*terminals)
+            elif all(isinstance(t, np.ndarray) for t in terminals):
+                if isinstance(token, StateChecker):
+                    token.set_state_value(X[:, token.state_index])
+                intermediate_result = token(*terminals)
 
-                    if not np.isfinite(intermediate_result).all():
-                        return None
-                else:
-                    intermediate_result = [token, *terminals]
-
-            if len(apply_stack) != 1:
-                apply_stack.pop()
-                apply_stack[-1].append(intermediate_result)
+                if not np.isfinite(intermediate_result).all():
+                    return None
             else:
+                intermediate_result = [token, *terminals]
+
+            if len(apply_stack) == 1:
                 return intermediate_result
+            apply_stack.pop()
+            apply_stack[-1].append(intermediate_result)
 
 
 def recursive_inversion(intermediate_result, y):
@@ -356,7 +354,7 @@ def recursive_inversion(intermediate_result, y):
         return recursive_inversion(intermediate_result[1], out)
     else:
         if isinstance(intermediate_result[1], np.ndarray):
-            if func.name == "sub" or func.name == "div":
+            if func.name in ["sub", "div"]:
                 out = func(intermediate_result[1], y)
             else:
                 out = inverse_function_map[func.name](y, intermediate_result[1])
@@ -457,7 +455,7 @@ class PolyOptimizer(PolyRegressorMixin):
         self.degree = degree
         self.coef_tol = coef_tol
         self.regressor = regressors[regressor](**regressor_params)
-        self.data_dict = dict()
+        self.data_dict = {}
         self.n_max_records = 10
 
     def fit(self, X, y):
@@ -490,7 +488,7 @@ class PolyOptimizer(PolyRegressorMixin):
                 self.regressor.fit(pod.all_monomials_data, y, pod.X_signature)
             else:
                 self.regressor.fit(pod.all_monomials_data, y)
-        except:  # the only thing we have seen is ValueError
+        except ValueError:
             return Polynomial([(0,) * X.shape[1]], np.ones(1))
 
         # Correct the coefficient of the constant term when regressor.intercept_ is nonzero.

@@ -666,13 +666,10 @@ class NoInputsConstraint(Constraint):
     def is_violated(self, actions, parent, sibling):
         # Violated if no input tokens are found in actions
         tokens = self.library.input_tokens
-        return bool(np.isin(tokens, actions).sum() == 0)
+        return np.isin(tokens, actions).sum() == 0
 
     def describe(self):
-        message = "{}: Sequences contain at least one input variable Token.".format(
-            self.__class__.__name__
-        )
-        return message
+        return f"{self.__class__.__name__}: Sequences contain at least one input variable Token."
 
 
 class InverseUnaryConstraint(Constraint):
@@ -696,27 +693,19 @@ class InverseUnaryConstraint(Constraint):
 
     def validate(self):
         if len(self.priors) == 0:
-            message = "There are no inverse unary Token pairs in the Library."
-            return message
+            return "There are no inverse unary Token pairs in the Library."
         return None
 
     def __call__(self, actions, parent, sibling, dangling):
-        prior = sum(
-            [prior(actions, parent, sibling, dangling) for prior in self.priors]
-        )
-        return prior
+        return sum(prior(actions, parent, sibling, dangling) for prior in self.priors)
 
     def is_violated(self, actions, parent, sibling):
 
-        for p in self.priors:
-            if p.is_violated(actions, parent, sibling):
-                return True
-
-        return False
+        return any(p.is_violated(actions, parent, sibling) for p in self.priors)
 
     def describe(self):
         message = [prior.describe() for prior in self.priors]
-        return "\n{}: ".format(self.__class__.__name__).join(message)
+        return f"\n{self.__class__.__name__}: ".join(message)
 
 
 class RepeatConstraint(Constraint):
@@ -740,19 +729,14 @@ class RepeatConstraint(Constraint):
         Prior.__init__(self, library)
         assert (
             min_ is not None or max_ is not None
-        ), "{}: At least one of (min_, max_) must not be None.".format(
-            self.__class__.__name__
-        )
+        ), f"{self.__class__.__name__}: At least one of (min_, max_) must not be None."
         self.min = min_
         self.max = max_
         self.tokens = library.actionize(tokens)
 
-        assert min_ is None, (
-            "{}: Repeat minimum constraints are not yet "
-            "supported. This requires knowledge of length constraints.".format(
-                self.__class__.__name__
-            )
-        )
+        assert (
+            min_ is None
+        ), f"{self.__class__.__name__}: Repeat minimum constraints are not yet supported. This requires knowledge of length constraints."
 
     def __call__(self, actions, parent, sibling, dangling):
         counts = np.sum(np.isin(actions, self.tokens), axis=1)
@@ -766,23 +750,16 @@ class RepeatConstraint(Constraint):
         return prior
 
     def is_violated(self, actions, parent, sibling):
-        return bool(np.isin(actions, self.tokens).sum() > self.max)
+        return np.isin(actions, self.tokens).sum() > self.max
 
     def describe(self):
         names = ", ".join([self.library.names[t] for t in self.tokens])
         if self.min is None:
-            message = "{}: [{}] cannot occur more than {} times.".format(
-                self.__class__.__name__, names, self.max
-            )
+            return f"{self.__class__.__name__}: [{names}] cannot occur more than {self.max} times."
         elif self.max is None:
-            message = "{}: [{}] must occur at least {} times.".format(
-                self.__class__.__name__, names, self.min
-            )
+            return f"{self.__class__.__name__}: [{names}] must occur at least {self.min} times."
         else:
-            message = "{}: [{}] must occur between {} and {} times.".format(
-                self.__class__.__name__, names, self.min, self.max
-            )
-        return message
+            return f"{self.__class__.__name__}: [{names}] must occur between {self.min} and {self.max} times."
 
 
 class LengthConstraint(Constraint):
@@ -841,26 +818,18 @@ class LengthConstraint(Constraint):
         l = len(actions[0])
         if self.min is not None and l < self.min:
             return True
-        if self.max is not None and l > self.max:
-            return True
-
-        return False
+        return self.max is not None and l > self.max
 
     def describe(self):
         message = []
         indent = " " * len(self.__class__.__name__) + "  "
         if self.min is not None:
             message.append(
-                "{}: Sequences have minimum length {}.".format(
-                    self.__class__.__name__, self.min
-                )
+                f"{self.__class__.__name__}: Sequences have minimum length {self.min}."
             )
         if self.max is not None:
-            message.append(
-                indent + "Sequences have maximum length {}.".format(self.max)
-            )
-        message = "\n".join(message)
-        return message
+            message.append(indent + f"Sequences have maximum length {self.max}.")
+        return "\n".join(message)
 
 
 class DomainRangeConstraint(Constraint):
@@ -941,7 +910,7 @@ class DomainRangeConstraint(Constraint):
         self.last_chance_unary = Prior.initial_prior(self)
         for t in self.library.unary_tokens:
             parent = self.library.parent_adjust[t]
-            if all([parent in arr for arr in self.constraining_parents]):
+            if all(parent in arr for arr in self.constraining_parents):
                 self.last_chance_unary[t] = -np.inf
 
     def initial_prior(self):
@@ -971,23 +940,13 @@ class DomainRangeConstraint(Constraint):
         return prior
 
     def describe(self):
-        message = []
         indent = " " * len(self.__class__.__name__) + "  "
-        message.append(
-            "{}: First token's range must contain [min(y), max(y)].".format(
-                self.__class__.__name__
-            )
-        )
-        message.append(
-            indent + "Input variable domains must be contained in unary parent domains."
-        )
-        message = "\n".join(message)
-        return message
-
-    def validate(self):
-        if self.p0.sum() == 0 and all([len(x) == 0 for x in self.constraining_parents]):
-            return "All token ranges contain [min(y), max(y)] and all token domains contain [min(x), max(x)]."
-        return None
+        message = [
+            f"{self.__class__.__name__}: First token's range must contain [min(y), max(y)].",
+            indent
+            + "Input variable domains must be contained in unary parent domains.",
+        ]
+        return "\n".join(message)
 
 
 class UniformArityPrior(Prior):
@@ -1011,14 +970,12 @@ class UniformArityPrior(Prior):
 
     def __call__(self, actions, parent, sibling, dangling):
 
-        # This will be broadcast when added to the joint prior
-        prior = self.logit_adjust
-        return prior
+        return self.logit_adjust
 
     def describe(self):
         """Describe the Prior."""
 
-        return "{}: Activated.".format(self.__class__.__name__)
+        return f"{self.__class__.__name__}: Activated."
 
 
 class SoftLengthPrior(Prior):
@@ -1059,8 +1016,7 @@ class SoftLengthPrior(Prior):
 
     def validate(self):
         if self.loc is None or self.scale is None:
-            message = "'scale' and 'loc' arguments must be specified!"
-            return message
+            return "'scale' and 'loc' arguments must be specified!"
         return None
 
 
@@ -1095,8 +1051,7 @@ class LanguageModelPrior(Prior):
 
     def validate(self):
         if self.weight is None:
-            message = "Need to specify language model arguments."
-            return message
+            return "Need to specify language model arguments."
         return None
 
 
@@ -1123,17 +1078,19 @@ class StateCheckerConstraint(Constraint):
             targets = []
 
             # Add StateChecker 'xl < tk' to targets if l < i
-            for child in library.state_checker_tokens:
-                if self.library[child].state_index < self.library[parent].state_index:
-                    targets.append(child)
-
+            targets.extend(
+                child
+                for child in library.state_checker_tokens
+                if self.library[child].state_index
+                < self.library[parent].state_index
+            )
             # Add StateChecker 'xl < tk' to targets if l == i and tk >= tj
             for child in library.state_checker_tokens:
                 if self.library[child].state_index == self.library[parent].state_index:
                     if self.library[child].threshold >= self.library[parent].threshold:
                         targets.append(child)
 
-            if len(targets) > 0:
+            if targets:
                 # Add prior that constraints targets (containing 'xl < tk' with l < i, and
                 # 'xl < tk' with l == i and tk >= tj) from being the left child of 'xi < tj'
                 prior = RelationalConstraint(
@@ -1144,11 +1101,13 @@ class StateCheckerConstraint(Constraint):
             # Add StateChecker 'xl < tk' to targets if l == i and tk < tj
             # (targets now contains all StateChecker 'xl < tk' with l <= i)
             for child in library.state_checker_tokens:
-                if self.library[child].state_index == self.library[parent].state_index:
-                    if self.library[child].threshold < self.library[parent].threshold:
-                        targets.append(child)
+                if (
+                    self.library[child].state_index == self.library[parent].state_index
+                    and self.library[child].threshold < self.library[parent].threshold
+                ):
+                    targets.append(child)
 
-            if len(targets) > 0:
+            if targets:
                 # Add prior that constraints targets (containing 'xl < tk' with l <= i)
                 # from being the right child of 'xi < tj'
                 prior = RelationalConstraint(
@@ -1187,26 +1146,19 @@ class StateCheckerConstraint(Constraint):
         return None
 
     def __call__(self, actions, parent, sibling, dangling):
-        prior = sum(
-            [prior(actions, parent, sibling, dangling) for prior in self.priors]
-        )
-        return prior
+        return sum(prior(actions, parent, sibling, dangling) for prior in self.priors)
 
     def describe(self):
         indent = " " * len(self.__class__.__name__) + "  "
         message = [
-            "StateCheckerConstraint: Sequences containing StateChecker tokens cannot produce degenerate logic."
+            "StateCheckerConstraint: Sequences containing StateChecker tokens cannot produce degenerate logic.",
+            (
+                indent
+                + "'xl < tk' cannot be the left child of 'xi < tj' if l < i or if l == i and tk >= tj."
+            ),
+            indent + "'xl < tk' cannot be the right child of 'xi < tj' if l <= i.",
+            indent + "A StateChecker cannot be a child of a non-StateChecker.",
         ]
-        message.append(
-            indent
-            + "'xl < tk' cannot be the left child of 'xi < tj' if l < i or if l == i and tk >= tj."
-        )
-        message.append(
-            indent + "'xl < tk' cannot be the right child of 'xi < tj' if l <= i."
-        )
-        message.append(
-            indent + "A StateChecker cannot be a child of a non-StateChecker."
-        )
         return "\n".join(message)
 
 
@@ -1237,7 +1189,7 @@ class MutuallyExclusiveConstraint(Constraint):
 
     def validate(self):
         if len(self.tokens) < 2:
-            return "Length of {} must be at least 2".format(self.tokens)
+            return f"Length of {self.tokens} must be at least 2"
         return None
 
     def is_violated(self, actions, parent, sibling):
@@ -1246,9 +1198,7 @@ class MutuallyExclusiveConstraint(Constraint):
     def describe(self):
         tokens = ", ".join([self.library.names[t] for t in self.tokens])
         message = self.__class__.__name__
-        message += ": Two or more distinct tokens in [{}] cannot appear in the same sequence.".format(
-            tokens
-        )
+        message += f": Two or more distinct tokens in [{tokens}] cannot appear in the same sequence."
         return message
 
 
@@ -1286,10 +1236,7 @@ class PolyConstraint(Constraint):
             )
 
     def __call__(self, actions, parent, sibling, dangling):
-        prior = sum(
-            [prior(actions, parent, sibling, dangling) for prior in self.priors]
-        )
-        return prior
+        return sum(prior(actions, parent, sibling, dangling) for prior in self.priors)
 
     def validate(self):
         if "poly" not in self.library.names:
@@ -1297,10 +1244,7 @@ class PolyConstraint(Constraint):
         return None
 
     def is_violated(self, actions, parent, sibling):
-        for prior in self.priors:
-            if prior.is_violated(actions, parent, sibling):
-                return True
-        return False
+        return any(prior.is_violated(actions, parent, sibling) for prior in self.priors)
 
     def describe(self):
         return "\n".join([prior.describe() for prior in self.priors])
@@ -1382,7 +1326,7 @@ class MultiDiscreteConstraint(Constraint):
                 )
                 self.priors.append(prior)
 
-        elif dense and not ordered:
+        elif dense:
             targets = [
                 t
                 for t in library.multi_discrete_tokens
@@ -1434,7 +1378,7 @@ class MultiDiscreteConstraint(Constraint):
     def __call__(self, actions, parent, sibling, dangling):
         if self.special_prior is None:
             prior = sum(
-                [prior(actions, parent, sibling, dangling) for prior in self.priors]
+                prior(actions, parent, sibling, dangling) for prior in self.priors
             )
         else:
             mask = np.full(len(actions), False)
@@ -1449,10 +1393,8 @@ class MultiDiscreteConstraint(Constraint):
                 actions[~mask], parent[~mask], sibling[~mask], dangling[~mask]
             )
             prior[mask] = sum(
-                [
-                    prior(actions[mask], parent[mask], sibling[mask], dangling[mask])
-                    for prior in self.priors
-                ]
+                prior(actions[mask], parent[mask], sibling[mask], dangling[mask])
+                for prior in self.priors
             )
         return prior
 
@@ -1463,8 +1405,10 @@ class MultiDiscreteConstraint(Constraint):
 
     def describe(self):
         indent = " " * len(self.__class__.__name__) + "  "
-        message = "MultiDiscreteConstraint: Child of a MultiDiscreteAction must"
-        message += " be a MultiDiscreteAction with a different action_dim or STOP."
+        message = (
+            "MultiDiscreteConstraint: Child of a MultiDiscreteAction must"
+            + " be a MultiDiscreteAction with a different action_dim or STOP."
+        )
         message = [message]
         if self.dense:
             message.append(indent + "Each action branch must contain all action_dim.")
