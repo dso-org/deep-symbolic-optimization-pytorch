@@ -14,9 +14,7 @@ def test_constant():
         const = HardCodedConstant(value=number)
         assert (
             const() == number
-        ), "Value returned from Constant.function() ({}) does not match input value ({}).".format(
-            const(), number
-        )
+        ), f"Value returned from Constant.function() ({const()}) does not match input value ({number})."
 
 
 def test_regression_with_hard_coded_constants(model):

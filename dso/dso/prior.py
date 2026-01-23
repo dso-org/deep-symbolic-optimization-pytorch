@@ -211,7 +211,7 @@ class JointPrior:
                 msg.append(repr(table))
             # msg.append("\nApplication will now exit.")
             print("\n".join(msg))
-                        # os._exit(1) # Bypass tensorflow exception-handling
+            # os._exit(1) # Bypass tensorflow exception-handling
 
         final_combined_prior[unfinished] = combined_prior
 
@@ -232,15 +232,14 @@ class JointPrior:
         )
 
     def describe(self):
-        message = "\n".join(prior.describe() for prior in self.priors)
-        return message
+        return "\n".join(prior.describe() for prior in self.priors)
 
     def is_violated(self, actions, parent, sibling):
-        for prior in self.priors:
-            if isinstance(prior, Constraint):
-                if prior.is_violated(actions, parent, sibling):
-                    return True
-        return False
+        return any(
+            isinstance(prior, Constraint)
+            and prior.is_violated(actions, parent, sibling)
+            for prior in self.priors
+        )
 
     def at_once(self, actions, parent, sibling):
         """
@@ -275,10 +274,7 @@ class JointPrior:
                 )  # Shape (batch, L)
                 ind_priors[i][:, t, :] += prior
 
-        # Combine all Priors
-        combined_prior = sum(ind_priors) + zero_prior
-
-        return combined_prior
+        return sum(ind_priors) + zero_prior
 
 
 class Prior:
@@ -307,8 +303,7 @@ class Prior:
         """Helper function to generate a starting prior of zeros."""
 
         batch_size = actions.shape[0]
-        prior = np.zeros((batch_size, self.L), dtype=np.float32)
-        return prior
+        return np.zeros((batch_size, self.L), dtype=np.float32)
 
     def initial_prior(self):
         """
@@ -356,7 +351,7 @@ class Prior:
     def describe(self):
         """Describe the Prior."""
 
-        return "{}: No description available.".format(self.__class__.__name__)
+        return f"{self.__class__.__name__}: No description available."
 
 
 class Constraint(Prior):
@@ -416,9 +411,7 @@ class Constraint(Prior):
         caller = inspect.getframeinfo(inspect.stack()[1][0])
 
         warnings.warn(
-            "{} ({}) {} : Using a slower version of constraint for Deap. You should write your own.".format(
-                caller.filename, caller.lineno, type(self).__name__
-            )
+            f"{caller.filename} ({caller.lineno}) {type(self).__name__} : Using a slower version of constraint for Deap. You should write your own."
         )
 
         assert (
@@ -561,11 +554,9 @@ class RelationalConstraint(Constraint):
         elif self.relationship == "sibling":
             violated = jit_check_constraint_violation(
                 actions, self.targets, sibling, self.effectors
+            ) or jit_check_constraint_violation(
+                actions, self.effectors, sibling, self.targets
             )
-            if not violated:
-                violated = jit_check_constraint_violation(
-                    actions, self.effectors, sibling, self.targets
-                )
 
         elif self.relationship == "uchild":
             unary_effectors = np.intersect1d(self.effectors, self.library.unary_tokens)
@@ -583,20 +574,14 @@ class RelationalConstraint(Constraint):
         return violated
 
     def validate(self):
-        message = []
-        if self.relationship in ["child", "descendant", "uchild", "lchild", "rchild"]:
-            if np.isin(self.effectors, self.library.terminal_tokens).any():
-                message = "{} relationship cannot have terminal effectors.".format(
-                    self.relationship.capitalize()
-                )
-                return message
+        if (
+            self.relationship in ["child", "descendant", "uchild", "lchild", "rchild"]
+            and np.isin(self.effectors, self.library.terminal_tokens).any()
+        ):
+            return f"{self.relationship.capitalize()} relationship cannot have terminal effectors."
         if len(self.targets) == 0:
-            message = "There are no target Tokens."
-            return message
-        if len(self.effectors) == 0:
-            message = "There are no effector Tokens."
-            return message
-        return None
+            return "There are no target Tokens."
+        return "There are no effector Tokens." if len(self.effectors) == 0 else None
 
     def describe(self):
 
@@ -610,10 +595,7 @@ class RelationalConstraint(Constraint):
             "lchild": "the left child",
             "rchild": "the right child",
         }[self.relationship]
-        message = "{}: [{}] cannot be {} of [{}].".format(
-            self.__class__.__name__, targets, relationship, effectors
-        )
-        return message
+        return f"{self.__class__.__name__}: [{targets}] cannot be {relationship} of [{effectors}]."
 
 
 class TrigConstraint(RelationalConstraint):
@@ -679,8 +661,7 @@ class NoInputsConstraint(Constraint):
         mask = (dangling == 1) & (
             np.sum(np.isin(actions, self.library.input_tokens), axis=1) == 0
         )
-        prior = self.make_constraint(mask, self.library.float_tokens)
-        return prior
+        return self.make_constraint(mask, self.library.float_tokens)
 
     def is_violated(self, actions, parent, sibling):
         # Violated if no input tokens are found in actions

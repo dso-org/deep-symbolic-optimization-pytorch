@@ -133,15 +133,7 @@ def weighted_quantile(values, weights, q):
     sorted_values = values[sorted_indices]
     cum_sorted_weights = np.cumsum(sorted_weights)
     i_quantile = np.argmax(cum_sorted_weights >= q)
-    quantile = sorted_values[i_quantile]
-
-    # NOTE: This implementation is equivalent to (but much faster than) the
-    # following:
-    # from scipy import stats
-    # empirical_dist = stats.rv_discrete(name='empirical_dist', values=(values, weights))
-    # quantile = empirical_dist.ppf(q)
-
-    return quantile
+    return sorted_values[i_quantile]
 
 
 # Entropy computation in batch
@@ -234,7 +226,7 @@ def safe_update_summary(csv_path, new_data):
         else:
             new_data_pd.to_csv(csv_path, header=True, mode="w+", index=True)
         return True
-    except:
+    except Exception:
         return False
 
 
@@ -264,9 +256,7 @@ def import_custom_source(import_source):
 
     # Dynamically imports the configured source
     mod = importlib.import_module(source)
-    func = getattr(mod, type)
-
-    return func
+    return getattr(mod, type)
 
 
 def pad_action_obs_priors(actions, obs, priors, pad_length):
