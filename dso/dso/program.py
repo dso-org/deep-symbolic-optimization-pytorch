@@ -246,7 +246,7 @@ class Program(object):
             i for i, t in enumerate(self.traversal) if isinstance(t, Polynomial)
         ]
         assert len(poly_pos) <= 1, "A program cannot contain more than one 'poly' token"
-        self.poly_pos = poly_pos[0] if len(poly_pos) > 0 else None
+        self.poly_pos = poly_pos[0] if poly_pos else None
         self.len_traversal = len(self.traversal)
 
         if self.have_cython and self.len_traversal > 1:
@@ -369,13 +369,9 @@ class Program(object):
         """Sets the class' complexity function"""
 
         all_functions = {
-            # No complexity
             None: lambda p: 0.0,
-            # Length of sequence
             "length": lambda p: len(p.traversal),
-            # Sum of token-wise complexities
-            "token": lambda p: sum([t.complexity for t in p.traversal]),
-            # Binding complexity: % of mutations relative to master seq
+            "token": lambda p: sum(t.complexity for t in p.traversal),
             "mutations": lambda p: Program.task.compute_mutational_distance(p),
         }
 
@@ -502,17 +498,14 @@ class Program(object):
         tree = convert_to_sympy(tree)
         try:
             expr = U.parse_expr(tree.__repr__())  # SymPy expression
-        except:
+        except Exception:
             expr = tree.__repr__()
         return expr
 
     def pretty(self):
         """Returns pretty printed string of the program"""
 
-        if self.task.task_type != "binding":
-            return U.pretty(self.sympy_expr)
-        else:
-            return None
+        return U.pretty(self.sympy_expr) if self.task.task_type != "binding" else None
 
     def print_stats(self):
         """Prints the statistics of the program
@@ -520,12 +513,12 @@ class Program(object):
         We will print the most honest reward possible when using validation.
         """
 
-        print("\tReward: {}".format(self.r))
-        print("\tCount Off-policy: {}".format(self.off_policy_count))
-        print("\tCount On-policy: {}".format(self.on_policy_count))
-        print("\tOriginally on Policy: {}".format(self.originally_on_policy))
-        print("\tInvalid: {}".format(self.invalid))
-        print("\tTraversal: {}".format(self))
+        print(f"\tReward: {self.r}")
+        print(f"\tCount Off-policy: {self.off_policy_count}")
+        print(f"\tCount On-policy: {self.on_policy_count}")
+        print(f"\tOriginally on Policy: {self.originally_on_policy}")
+        print(f"\tInvalid: {self.invalid}")
+        print(f"\tTraversal: {self}")
         if self.task.task_type != "binding":
             print("\tExpression:")
             print("{}\n".format(indent(self.pretty(), "\t  ")))
@@ -552,10 +545,10 @@ class Node(object):
         self.children = []
 
     def __repr__(self):
-        children_repr = ",".join(repr(child) for child in self.children)
         if len(self.children) == 0:
             return self.val  # Avoids unnecessary parantheses, e.g. x1()
-        return "{}({})".format(self.val, children_repr)
+        children_repr = ",".join(repr(child) for child in self.children)
+        return f"{self.val}({children_repr})"
 
 
 def build_tree(traversal):
@@ -579,19 +572,9 @@ def convert_to_sympy(node):
     """Adjusts trees to only use node values supported by sympy"""
 
     if node.val == "div":
-        node.val = "Mul"
-        new_right = Node("Pow")
-        new_right.children.append(node.children[1])
-        new_right.children.append(Node("-1"))
-        node.children[1] = new_right
-
+        _extracted_from_convert_to_sympy_5("Mul", node, "Pow")
     elif node.val == "sub":
-        node.val = "Add"
-        new_right = Node("Mul")
-        new_right.children.append(node.children[1])
-        new_right.children.append(Node("-1"))
-        node.children[1] = new_right
-
+        _extracted_from_convert_to_sympy_5("Add", node, "Mul")
     elif node.val == "inv":
         node.val = Node("Pow")
         node.children.append(Node("-1"))
@@ -616,3 +599,12 @@ def convert_to_sympy(node):
         convert_to_sympy(child)
 
     return node
+
+
+# TODO Rename this here and in `convert_to_sympy`
+def _extracted_from_convert_to_sympy_5(arg0, node, arg2):
+    node.val = arg0
+    new_right = Node(arg2)
+    new_right.children.append(node.children[1])
+    new_right.children.append(Node("-1"))
+    node.children[1] = new_right
