@@ -56,10 +56,7 @@ def make_prior(library, config_prior):
         if isinstance(prior_args, dict):
             prior_args = [prior_args]
         for single_prior_args in prior_args:
-            # Attempt to build the Prior. Any Prior can fail if it references a
-            # Token not in the Library.
-            prior_is_enabled = single_prior_args.pop("on", False)
-            if prior_is_enabled:
+            if prior_is_enabled := single_prior_args.pop("on", False):
                 try:
                     prior = prior_class(library, **single_prior_args)
                     warn_message = prior.validate()
@@ -72,12 +69,7 @@ def make_prior(library, config_prior):
 
             # Add warning context
             if warn_message is not None:
-                warn_message = (
-                    "Skipping invalid '{}' with arguments {}. "
-                    "Reason: {}".format(
-                        prior_class.__name__, single_prior_args, warn_message
-                    )
-                )
+                warn_message = f"Skipping invalid '{prior_class.__name__}' with arguments {single_prior_args}. Reason: {warn_message}"
                 warn_messages.append(warn_message)
 
             # Add the Prior if there are no warnings
@@ -123,7 +115,7 @@ class JointPrior:
         self.L = self.library.L
         self.priors = priors
         assert all(
-            [prior.library is library for prior in priors]
+            prior.library is library for prior in priors
         ), "All Libraries must be identical."
 
         # Name the priors, e.g. RepeatConstraint-0
@@ -132,7 +124,7 @@ class JointPrior:
         for prior in self.priors:
             name = prior.__class__.__name__
             counts[name] += 1
-            self.names.append("{}-{}".format(name, counts[name]))
+            self.names.append(f"{name}-{counts[name]}")
 
         # Initialize variables for constraint count report
         self.do_count = count_constraints
@@ -194,22 +186,19 @@ class JointPrior:
         collision_mask = np.all(np.isneginf(combined_prior), axis=1)
         if np.any(collision_mask):
             collisions = collision_mask.nonzero()[0]  # Indices of collisions
-            msg = []
-            msg.append("ERROR in {}:".format(__file__))
-            msg.append(
-                "Encountered collision(s) in prior. This occurs when a prior contains all -inf values. "
-                + "This typically indicates a logic error in a prior formulation, or a 'collision' when "
-                + "configuring multiple priors that are not always compatible. See the table(s) below "
-                + "for which priors caused each collision. X's indicate a value of -inf."
-            )
+            msg = [
+                f"ERROR in {__file__}:",
+                (
+                    "Encountered collision(s) in prior. This occurs when a prior contains all -inf values. "
+                    + "This typically indicates a logic error in a prior formulation, or a 'collision' when "
+                    + "configuring multiple priors that are not always compatible. See the table(s) below "
+                    + "for which priors caused each collision. X's indicate a value of -inf."
+                ),
+            ]
             for i, collision in enumerate(collisions):
+                msg.append(f"\n----- Collision {i + 1} of {len(collisions)} -----")
                 msg.append(
-                    "\n----- Collision {} of {} -----".format(i + 1, len(collisions))
-                )
-                msg.append(
-                    "Traversal: {}".format(
-                        self.library.tokenize(unfinished_actions[collision])
-                    )
+                    f"Traversal: {self.library.tokenize(unfinished_actions[collision])}"
                 )
                 table = PrettyTable(["Prior"] + self.library.names)
                 for j, ind_prior in enumerate(ind_priors):
@@ -222,7 +211,7 @@ class JointPrior:
                 msg.append(repr(table))
             # msg.append("\nApplication will now exit.")
             print("\n".join(msg))
-            # os._exit(1) # Bypass tensorflow exception-handling
+                        # os._exit(1) # Bypass tensorflow exception-handling
 
         final_combined_prior[unfinished] = combined_prior
 
