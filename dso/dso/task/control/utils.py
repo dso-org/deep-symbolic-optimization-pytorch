@@ -16,32 +16,58 @@ try:
 except ImportError:
     mpi4py = None
 
-from stable_baselines import PPO2, A2C, ACER, ACKTR, DQN, HER, SAC, TD3
+_STABLE_BASELINES_ERROR = None
+try:
+    from stable_baselines import PPO2, A2C, ACER, ACKTR, DQN, HER, SAC, TD3
+except Exception as exc:
+    PPO2 = A2C = ACER = ACKTR = DQN = HER = SAC = TD3 = None
+    _STABLE_BASELINES_ERROR = exc
 
-if mpi4py is None:
+if mpi4py is None or _STABLE_BASELINES_ERROR is not None:
     DDPG, TRPO = None, None
 else:
     from stable_baselines import DDPG, TRPO
 
 
-ALGORITHMS = {
-    "a2c": A2C,
-    "acer": ACER,
-    "acktr": ACKTR,
-    "dqn": DQN,
-    "ddpg": DDPG,
-    "her": HER,
-    "sac": SAC,
-    "ppo2": PPO2,
-    "trpo": TRPO,
-    "td3": TD3,
-}
+ALGORITHMS = {}
+if A2C is not None:
+    ALGORITHMS["a2c"] = A2C
+if ACER is not None:
+    ALGORITHMS["acer"] = ACER
+if ACKTR is not None:
+    ALGORITHMS["acktr"] = ACKTR
+if DQN is not None:
+    ALGORITHMS["dqn"] = DQN
+if DDPG is not None:
+    ALGORITHMS["ddpg"] = DDPG
+if HER is not None:
+    ALGORITHMS["her"] = HER
+if SAC is not None:
+    ALGORITHMS["sac"] = SAC
+if PPO2 is not None:
+    ALGORITHMS["ppo2"] = PPO2
+if TRPO is not None:
+    ALGORITHMS["trpo"] = TRPO
+if TD3 is not None:
+    ALGORITHMS["td3"] = TD3
+
+
+def _require_stable_baselines():
+    if _STABLE_BASELINES_ERROR is None:
+        return
+    raise ImportError(
+        "stable-baselines (TensorFlow) is required to load anchor models. "
+        "Install tensorflow + stable-baselines or remove 'anchor' from action_spec."
+    ) from _STABLE_BASELINES_ERROR
 
 
 # NOTE: This does not load observation normalization
 # Loads a model into global namespace
 def load_model(algorithm, model_path):
+    _require_stable_baselines()
     global model
+    if algorithm not in ALGORITHMS:
+        raise KeyError(f"Algorithm '{algorithm}' is not available.")
     model = ALGORITHMS[algorithm].load(model_path)
     print("Loaded {} model {}".format(algorithm.upper(), model_path))
 
@@ -49,6 +75,7 @@ def load_model(algorithm, model_path):
 # Load an environment's default model, which is located at:
 # dso/task/control/data/[env_name]/model-[algorithm].[pkl | zip]
 def load_default_model(env_name):
+    _require_stable_baselines()
 
     # Find default algorithm and model path for the environment
     task_root = resource_filename("dso.task", "control")

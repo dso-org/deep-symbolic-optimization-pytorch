@@ -63,6 +63,8 @@ There are a few additional dependencies to run the `control` task. Install them 
 ```
 pip install -e ./dso[control]
 ```
+Note: TensorFlow (via `stable-baselines`) is only required if you use anchor
+models in the control task. Non-anchor runs do not need TensorFlow.
 
 ### Installation - all tasks
 To install all dependencies for all tasks, use the `all` option:
