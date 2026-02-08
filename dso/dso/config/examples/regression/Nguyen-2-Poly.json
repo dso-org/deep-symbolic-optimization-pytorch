@@ -1,0 +1,6 @@
+{
+   "task" : {
+      "dataset" : "dso/dso/task/regression/data/Nguyen-2.csv",
+      "function_set" : ["add", "sub", "mul", "div", "sin", "cos", "exp", "log", "poly"]
+   }
+}

@@ -97,6 +97,38 @@ model.train()
 ```
 After training, results are saved to a timestamped directory in the path given in `config["training"]["logdir"]` (default `./log`).
 
+### Method 3: LLM Config Planner (experimental)
+
+Use the planner to generate a runnable config from a natural-language goal plus task metadata.
+
+Dry-run mode (no API calls, deterministic planner):
+```
+PYTHONPATH=dso python -m dso.scripts.llm_suggest_config \
+  --task regression \
+  --dataset Nguyen-2 \
+  --goal "Fast baseline config with robust priors" \
+  --model gpt-4o-mini \
+  --output exclude_from_git/20260206_LLM_support/examples/nguyen2_llm_plan.generated.json \
+  --dry_run
+```
+
+LLM mode (OpenAI-compatible Chat Completions endpoint):
+```
+export OPENAI_API_KEY="<your_api_key>"
+export OPENAI_API_BASE="https://api.openai.com/v1" # optional
+
+PYTHONPATH=dso python -m dso.scripts.llm_suggest_config \
+  --task regression \
+  --dataset Nguyen-2 \
+  --goal "Accurate config under moderate compute budget with interpretable expressions" \
+  --model gpt-4o-mini \
+  --output ./log/llm_configs/nguyen2_config.json
+```
+
+The planner writes:
+* A planned config JSON at `--output`
+* A planner report JSON at `<output_basename>.report.json`
+
 ### Configuring runs
 
 A single JSON file is used to configure each run. This file specifies the symbolic optimization task and all hyperparameters.

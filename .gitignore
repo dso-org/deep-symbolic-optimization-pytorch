@@ -21,3 +21,4 @@ dep-repos/
 !/.gitignore
 *.key
 exclude*
+.env.livai
