@@ -85,6 +85,12 @@ python -m dso.run path/to/config.json
 ```
 After training, results are saved to a timestamped directory in the path given in the `"logdir"` parameter (default `./log`).
 
+> **Note**
+> Some logging options require extra dependencies. In particular,
+> `logging.save_summary=true` uses TensorBoard (`torch.utils.tensorboard`) and
+> requires installing `tensorboard` (for example: `pip install tensorboard`).
+> If TensorBoard is not installed, keep `logging.save_summary=false`.
+
 ### Method 2: Running DSO via Python interface
 
 The Python interface lets users instantiate and customize DSO models via Python scripts, an interactive Python shell, or an iPython notebook. The core DSO model is `dso.core.DeepSymbolicOptimizer`. After creating your config file, you can use:
