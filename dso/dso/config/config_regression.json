@@ -57,7 +57,7 @@
          // of least squares regressor "dso_least_squares".
          "regressor": "dso_least_squares",
          "regressor_params": {
-            // Cutoff value for p-value of coefficients. Coefficients with 
+            // Cutoff value for p-value of coefficients. Coefficients with
             // larger p-values are forced to zero.
             "cutoff_p_value": 1.0,
             // Maximum number of terms in the polynomial. If more coefficients are nonzero,
@@ -67,7 +67,40 @@
             // with magnitude less than this value will be regarded as 0.
             "coef_tol": 1e-6
          }
-      }
+      },
+
+      // OPTIONAL: Skeleton expression templates
+      // Each skeleton becomes a terminal token in the function set with optimizable coefficients
+      // Uncomment to use skeleton expressions
+      // "skeleton_expressions": [
+      //    {
+      //       "name": "fourier_basis",
+      //       "expression": "a*cos(x1) + b*sin(x1) + c",
+      //       "description": "First-order Fourier basis for periodic signals"
+      //    },
+      //    {
+      //       "name": "exp_decay",
+      //       "expression": "a*exp(-b*x1) + c",
+      //       "description": "Exponential decay with offset"
+      //    }
+      // ],
+
+      // OPTIONAL: Parameters for skeleton expression optimization
+      // Only used if skeleton_expressions is specified
+      // "skeleton_optimizer_params": {
+      //    "coef_tol": 1e-6,
+      //    "linear_regressor": "dso_least_squares",
+      //    "linear_regressor_params": {
+      //       "cutoff_p_value": 1.0,
+      //       "n_max_terms": null,
+      //       "coef_tol": 1e-6
+      //    },
+      //    "nonlinear_optimizer": "scipy",
+      //    "nonlinear_optimizer_params": {
+      //       "method": "L-BFGS-B",
+      //       "options": {"maxiter": 100}
+      //    }
+      // }
    },
 
    // Only the key training hyperparameters are listed here. See

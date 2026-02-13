@@ -8,6 +8,8 @@ import numpy as np
 import array
 
 from dso.library import StateChecker, Polynomial
+from dso.skeleton import SkeletonExpression
+from dso.skeleton import SkeletonExpression
 
 # Cython specific C imports
 cimport numpy as np
@@ -78,6 +80,8 @@ def execute(np.ndarray X, int len_traversal, list traversal, int[:] is_input_var
             if isinstance(stack_end_function, StateChecker):
                 stack_end_function.set_state_value(X[:, stack_end_function.state_index])
             if isinstance(stack_end_function, Polynomial):
+                intermediate_result = stack_end_function(X)
+            elif isinstance(stack_end_function, SkeletonExpression):
                 intermediate_result = stack_end_function(X)
             else:
                 intermediate_result = stack_end_function(*stack_end[1:(stack_count[sp] + 1)]) # 85% of overhead

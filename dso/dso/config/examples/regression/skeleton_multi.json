@@ -1,0 +1,35 @@
+{
+   "experiment": {
+      "logdir": "./log_skeleton_multi"
+   },
+   "task": {
+      "task_type": "regression",
+      "dataset": "Nguyen-1",
+      "function_set": ["add", "sub", "mul", "div", "sin", "cos", "exp"],
+      "skeleton_expressions": [
+         {
+            "name": "fourier",
+            "expression": "a*cos(x1) + b*sin(x1) + c",
+            "description": "Fourier basis"
+         },
+         {
+            "name": "poly2",
+            "expression": "a*x1**2 + b*x1 + c",
+            "description": "Quadratic polynomial"
+         },
+         {
+            "name": "linear",
+            "expression": "a*x1 + b",
+            "description": "Linear function"
+         }
+      ]
+   },
+   "training": {
+      "n_samples": 50000,
+      "batch_size": 500,
+      "n_cores_batch": 1
+   },
+   "policy": {
+      "max_length": 32
+   }
+}

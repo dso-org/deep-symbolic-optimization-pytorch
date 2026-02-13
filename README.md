@@ -51,7 +51,7 @@ source venv3/bin/activate # Activate the virtual environment
 ```
 Then, from the repository root:
 ```
-pip install --upgrade setuptools pip
+pip install --upgrade "setuptools<81" pip
 export CFLAGS="-I $(python -c "import numpy; print(numpy.get_include())") $CFLAGS" # Needed on Mac to prevent fatal error: 'numpy/arrayobject.h' file not found
 pip install -e ./dso # Install DSO package and core dependencies
 ```

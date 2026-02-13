@@ -371,6 +371,14 @@ class Library:
             self.poly_token = self.names.index("poly")
         except ValueError:
             self.poly_token = None
+
+        # Track skeleton expression tokens (may be multiple)
+        # Import here to avoid circular dependency
+        from dso.skeleton import SkeletonExpression
+
+        self.skeleton_tokens = [
+            i for i, t in enumerate(self.tokens) if isinstance(t, SkeletonExpression)
+        ]
         self.parent_adjust = np.full_like(self.arities, -1)
         count = 0
         for i in range(len(self.arities)):

@@ -1,0 +1,30 @@
+{
+   "experiment": {
+      "logdir": "./log_skeleton_exponential"
+   },
+   "task": {
+      "task_type": "regression",
+      "dataset": "Nguyen-3",
+      "function_set": ["add", "sub", "mul", "div", "sin", "cos"],
+      "skeleton_expressions": [
+         {
+            "name": "exp_decay",
+            "expression": "a*exp(-b*x1) + c",
+            "description": "Exponential decay with offset"
+         },
+         {
+            "name": "exp_growth",
+            "expression": "a*exp(b*x1) + c",
+            "description": "Exponential growth with offset"
+         }
+      ]
+   },
+   "training": {
+      "n_samples": 100000,
+      "batch_size": 500,
+      "n_cores_batch": 1
+   },
+   "policy": {
+      "max_length": 32
+   }
+}

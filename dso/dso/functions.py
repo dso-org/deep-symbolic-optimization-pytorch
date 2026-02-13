@@ -11,6 +11,7 @@ from dso.library import (
     Polynomial,
     StateChecker,
 )
+from dso.skeleton import SkeletonExpression
 import dso.utils as U
 
 GAMMA = 0.57721566490153286060651209008240243104215933593992
@@ -198,7 +199,11 @@ def create_state_checkers(n_states, threshold_set):
 
 
 def create_tokens(
-    n_input_var, function_set, protected, decision_tree_threshold_set=None
+    n_input_var,
+    function_set,
+    protected,
+    decision_tree_threshold_set=None,
+    skeleton_expressions=None,
 ):
     """
     Helper function to create Tokens.
@@ -219,6 +224,12 @@ def create_tokens(
         or a list of lists of constants [[t11, t12, t1n], [t21, t22, ..., t2m], ...].
         In the latter case, the i-th list contains the thresholds for input variable xi for constructing
         nodes (xi < tij) in decision trees. The sizes of the threshold lists can be different.
+
+    skeleton_expressions : list of dict, optional
+        List of skeleton expression specifications. Each dict should contain:
+        - name: unique identifier for the skeleton token
+        - expression: mathematical expression string with coefficients and variables
+        - description: optional description of the skeleton
     """
 
     tokens = []
@@ -261,5 +272,25 @@ def create_tokens(
     if decision_tree_threshold_set is not None and len(decision_tree_threshold_set) > 0:
         state_checkers = create_state_checkers(n_input_var, decision_tree_threshold_set)
         tokens.extend(state_checkers)
+
+    # Create skeleton expression tokens
+    if skeleton_expressions is not None:
+        for skel_spec in skeleton_expressions:
+            try:
+                token = SkeletonExpression(
+                    name=skel_spec["name"],
+                    expression_str=skel_spec["expression"],
+                    n_input_vars=n_input_var,
+                    max_count=skel_spec.get("max_count", 1),
+                )
+            except Exception as exc:
+                name = skel_spec.get("name", "<unnamed>")
+                expr = skel_spec.get("expression", "<missing>")
+                print(
+                    "WARNING: Skipping invalid skeleton expression "
+                    f"'{name}' ({expr}): {exc}"
+                )
+                continue
+            tokens.append(token)
 
     return tokens

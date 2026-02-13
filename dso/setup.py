@@ -12,6 +12,7 @@ required = [
     "black",
     "flake8",
     "cython",
+    "setuptools<81",
     "numpy==1.19.5",
     "torch",
     "numba==0.53.1",

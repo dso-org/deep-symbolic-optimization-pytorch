@@ -5,6 +5,7 @@ except ImportError:
 import array
 
 from dso.library import StateChecker, Polynomial
+from dso.skeleton import SkeletonExpression
 
 
 def python_execute(traversal, X):
@@ -38,6 +39,8 @@ def python_execute(traversal, X):
                 if isinstance(token, StateChecker):
                     token.set_state_value(X[:, token.state_index])
                 if isinstance(token, Polynomial):
+                    intermediate_result = token(X)
+                elif isinstance(token, SkeletonExpression):
                     intermediate_result = token(X)
                 else:
                     intermediate_result = token(*terminals)

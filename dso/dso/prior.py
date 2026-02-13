@@ -84,6 +84,10 @@ def make_prior(library, config_prior):
     if len(library.state_checker_tokens) > 0:
         priors.append(StateCheckerConstraint(library))
 
+    # Turn SkeletonConstraint "on" if skeleton tokens are in library
+    if len(library.skeleton_tokens) > 0:
+        priors.append(SkeletonConstraint(library))
+
     joint_prior = JointPrior(library, priors, count_constraints)
 
     print("-- BUILDING PRIOR START -------------")
@@ -1240,6 +1244,37 @@ class PolyConstraint(Constraint):
     def validate(self):
         if "poly" not in self.library.names:
             return "There is no 'poly' token in the Library"
+        return None
+
+    def is_violated(self, actions, parent, sibling):
+        return any(prior.is_violated(actions, parent, sibling) for prior in self.priors)
+
+    def describe(self):
+        return "\n".join([prior.describe() for prior in self.priors])
+
+
+class SkeletonConstraint(Constraint):
+    """Class that constrains each skeleton expression token to appear at most
+    max_count times (default 1) in a traversal."""
+
+    def __init__(self, library):
+        Prior.__init__(self, library)
+        from dso.skeleton import SkeletonExpression
+
+        self.priors = []
+        for idx in library.skeleton_tokens:
+            token = library.tokens[idx]
+            if isinstance(token, SkeletonExpression):
+                self.priors.append(
+                    RepeatConstraint(library, token.name, None, token.max_count)
+                )
+
+    def __call__(self, actions, parent, sibling, dangling):
+        return sum(prior(actions, parent, sibling, dangling) for prior in self.priors)
+
+    def validate(self):
+        if len(self.library.skeleton_tokens) == 0:
+            return "There are no skeleton tokens in the Library"
         return None
 
     def is_violated(self, actions, parent, sibling):

@@ -1,0 +1,25 @@
+{
+   "experiment": {
+      "logdir": "./log_skeleton_fourier"
+   },
+   "task": {
+      "task_type": "regression",
+      "dataset": "Nguyen-2",
+      "function_set": ["add", "sub", "mul", "div"],
+      "skeleton_expressions": [
+         {
+            "name": "fourier1",
+            "expression": "a*cos(x1) + b*sin(x1) + c",
+            "description": "First-order Fourier basis for periodic signals"
+         }
+      ]
+   },
+   "training": {
+      "n_samples": 100000,
+      "batch_size": 500,
+      "n_cores_batch": 1
+   },
+   "policy": {
+      "max_length": 32
+   }
+}

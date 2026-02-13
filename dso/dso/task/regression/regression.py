@@ -31,6 +31,8 @@ class RegressionTask(HierarchicalTask):
         protected=False,
         decision_tree_threshold_set=None,
         poly_optimizer_params=None,
+        skeleton_expressions=None,
+        skeleton_optimizer_params=None,
     ):
         """
         Parameters
@@ -185,6 +187,7 @@ class RegressionTask(HierarchicalTask):
             function_set=function_set,
             protected=protected,
             decision_tree_threshold_set=decision_tree_threshold_set,
+            skeleton_expressions=skeleton_expressions,
         )
         self.library = Library(tokens)
 
@@ -206,6 +209,28 @@ class RegressionTask(HierarchicalTask):
 
             self.poly_optimizer = PolyOptimizer(**poly_optimizer_params)
 
+        # Function to optimize skeleton expression tokens
+        if len(self.library.skeleton_tokens) > 0:
+            from dso.skeleton import SkeletonOptimizer
+
+            if skeleton_optimizer_params is None:
+                skeleton_optimizer_params = {
+                    "coef_tol": 1e-6,
+                    "linear_regressor": "dso_least_squares",
+                    "linear_regressor_params": {
+                        "cutoff_p_value": 1.0,
+                        "n_max_terms": None,
+                        "coef_tol": 1e-6,
+                    },
+                    "nonlinear_optimizer": "scipy",
+                    "nonlinear_optimizer_params": {
+                        "method": "L-BFGS-B",
+                        "options": {"maxiter": 100},
+                    },
+                }
+
+            self.skeleton_optimizer = SkeletonOptimizer(**skeleton_optimizer_params)
+
     def reward_function(self, p, optimizing=False):
         # fit a polynomial if p contains a 'poly' token
         if p.poly_pos is not None:
@@ -223,6 +248,26 @@ class RegressionTask(HierarchicalTask):
                 p.traversal[p.poly_pos] = self.poly_optimizer.fit(
                     self.X_train, poly_data_y
                 )
+
+        # Optimize skeleton expressions if p contains skeleton tokens
+        if len(p.skeleton_positions) > 0:
+            for idx in range(len(p.skeleton_positions)):
+                skeleton = p.get_skeleton(idx)
+
+                # For now, assume skeleton is at the top level (simplest case)
+                # In the future, could use partial execution and inversion like poly
+                y_data = self.y_train
+
+                # Optimize coefficients
+                try:
+                    optimized_skeleton = self.skeleton_optimizer.fit(
+                        skeleton, self.X_train, y_data
+                    )
+                    p.set_skeleton(idx, optimized_skeleton)
+                except Exception as e:
+                    # If optimization fails, mark program as invalid
+                    p.invalid = True
+                    break
 
         # Compute estimated values
         y_hat = p.execute(self.X_train)

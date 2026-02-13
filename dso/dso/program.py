@@ -247,6 +247,13 @@ class Program(object):
         ]
         assert len(poly_pos) <= 1, "A program cannot contain more than one 'poly' token"
         self.poly_pos = poly_pos[0] if poly_pos else None
+
+        # Track skeleton expression tokens (may be multiple)
+        from dso.skeleton import SkeletonExpression
+
+        self.skeleton_positions = [
+            i for i, t in enumerate(self.traversal) if isinstance(t, SkeletonExpression)
+        ]
         self.len_traversal = len(self.traversal)
 
         if self.have_cython and self.len_traversal > 1:
@@ -278,12 +285,19 @@ class Program(object):
         result : np.array or list of np.array
             In a single-object Program, returns just an array. In a multi-object Program, returns a list of arrays.
         """
+        # TEMPORARY FIX: Use Python execution if skeleton expressions present
+        # This avoids Cython compilation issues until cyfunc is recompiled
+        execute_func = Program.execute_function
+        # if len(self.skeleton_positions) > 0 and Program.execute_function != python_execute:
+        #     from dso.execute import python_execute as py_exec
+        #     execute_func = py_exec
+
         if not Program.protected:
             result, self.invalid, self.error_node, self.error_type = (
-                Program.execute_function(self.traversal, X)
+                execute_func(self.traversal, X)
             )
         else:
-            result = Program.execute_function(self.traversal, X)
+            result = execute_func(self.traversal, X)
         return result
 
     def optimize(self):
@@ -343,6 +357,14 @@ class Program(object):
 
         if self.poly_pos is not None:
             self.traversal[self.poly_pos] = poly_token
+
+    def get_skeleton(self, idx):
+        """Returns the skeleton token at the given index in skeleton_positions."""
+        return self.traversal[self.skeleton_positions[idx]]
+
+    def set_skeleton(self, idx, skeleton_token):
+        """Sets the skeleton token at the given index in skeleton_positions."""
+        self.traversal[self.skeleton_positions[idx]] = skeleton_token
 
     @classmethod
     def clear_cache(cls):
